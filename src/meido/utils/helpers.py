@@ -13,7 +13,7 @@ import httpx
 from httpx import UnsupportedProtocol
 from typing_extensions import ParamSpec
 
-from utils.const import REQUEST_HEADERS
+from meido.utils.const import REQUEST_HEADERS
 
 __all__ = ("sha1", "gen_pkg", "async_re_sub", "execute", "isabstract", "download_resource")
 

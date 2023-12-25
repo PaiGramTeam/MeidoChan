@@ -4,9 +4,6 @@ from typing import List
 
 from meido.utils.const._path import *
 from meido.utils.const._single import *
-from meido.utils.const._url import *
-
-from meido.basemodel import RegionEnum
 
 NOT_SET = object()
 # noinspection PyTypeChecker
@@ -24,13 +21,3 @@ USER_AGENT: str = (
     "Chrome/90.0.4430.72 Safari/537.36"
 )
 REQUEST_HEADERS: dict = {"User-Agent": USER_AGENT}
-
-REGION_MAP = {
-    "1": RegionEnum.HYPERION,
-    "2": RegionEnum.HYPERION,
-    "5": RegionEnum.HYPERION,
-    "6": RegionEnum.HOYOLAB,
-    "7": RegionEnum.HOYOLAB,
-    "8": RegionEnum.HOYOLAB,
-    "9": RegionEnum.HOYOLAB,
-}
