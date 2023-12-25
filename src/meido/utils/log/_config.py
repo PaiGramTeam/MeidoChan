@@ -21,6 +21,7 @@ class LoggerConfig(BaseSettings):
     """高亮的关键字"""
     time_format: str = "[%Y-%m-%d %X]"
     """时间格式"""
+    omit_repeated_times: bool = True
     capture_warnings: bool = True
     """是否捕获 warning"""
     color_system: Literal["auto", "standard", "256", "truecolor", "windows"] = "auto"

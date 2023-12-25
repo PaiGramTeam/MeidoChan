@@ -6,6 +6,7 @@ import regex as re
 from meido.config import config
 from meido.utils.const import PROJECT_ROOT
 from meido.utils.log._config import LoggerConfig
+from meido.utils.log._handler import Handler
 from meido.utils.log._logger import Logger
 
 if TYPE_CHECKING:

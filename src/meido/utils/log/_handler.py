@@ -1,10 +1,11 @@
 import logging
 import os
+import sys
 from datetime import datetime
 from functools import lru_cache
 from logging import LogRecord
 from pathlib import Path
-from typing import Literal, TYPE_CHECKING
+from typing import IO, Literal, TYPE_CHECKING
 
 from rich.console import Console
 from rich.containers import Renderables
@@ -55,6 +56,7 @@ class Handler(logging.Handler):
         self,
         level: int | str = 0,
         *,
+        file: IO[str] = sys.stdout,
         width: int | None = None,
         color_system: Literal["auto", "standard", "256", "truecolor", "windows"] = "auto",
         omit_repeated_times: bool = True,
@@ -72,28 +74,34 @@ class Handler(logging.Handler):
             width=width,
             color_system=color_system,
             theme=Theme(DEFAULT_STYLE),
+            file=file,
         )
         self.omit_repeated_times = omit_repeated_times
         self.show_path = show_path
         self.enable_link_path = enable_link_path
         self.markup = markup
         self.keywords = keywords
-        self.time_format = time_format
+        self.time_format = time_format or "%X"
         self.rich_tracebacks = rich_tracebacks
-        self.traceback_configs = traceback_configs
+        self.traceback_configs = traceback_configs or LogTracebackConfig()
         self.project_root = project_root or PROJECT_ROOT
 
         self._last_time = None
 
     def _get_message_renderable(self, record: LogRecord, message: str) -> Text:
         markup: bool = getattr(record, "markup", self.markup)
-        keywords: list[str] = list(set(getattr(record, "keywords", []) + self.keywords))
+        keywords: list[str] = list(set(getattr(record, "keywords", []) + (self.keywords or [])))
 
         message_text = Text.from_markup(message) if markup else Text(message)
 
         if keywords:
             message_text.highlight_words(keywords, "logging.keyword")
         return message_text
+
+    def _get_log_time(self, record: LogRecord) -> str | Text:
+        log_time = datetime.fromtimestamp(record.created)
+        time_formatter = None if self.formatter is None else self.formatter.datefmt
+        return time_formatter(log_time) if callable(time_formatter) else Text(log_time.strftime(self.time_format))
 
     def render(self, record: LogRecord, message: str) -> "ConsoleRenderable":
         depth: int = getattr(record, "depth", self.traceback_configs.locals.max_depth)
@@ -131,21 +139,18 @@ class Handler(logging.Handler):
         level_name = record.levelname
         level_text = Text.styled(level_name.ljust(8), f"logging.level.{level_name.lower()}")
 
-        time_format = None if self.formatter is None else self.formatter.datefmt
-        log_time = datetime.fromtimestamp(record.created)
-
         renderables = [i for i in [message_renderable, traceback] if i is not None and i]
 
         output = Table.grid(padding=(0, 1), expand=True)
         output.add_column(style="log.time")
-        output.add_column(style="log.level", width=self.console.width)
+        output.add_column(style="log.level", width=8)
         output.add_column(ratio=1, style="log.message", overflow="fold")
         output.add_column(style="log.path")
         output.add_column(style="log.line_no", width=4)
 
         row: list["RenderableType"] = []
 
-        log_time_display = Text(log_time.strftime(time_format))
+        log_time_display = self._get_log_time(record)
         if log_time_display == self._last_time and self.omit_repeated_times:
             row.append(Text(" " * len(log_time_display)))
         else:
@@ -181,4 +186,4 @@ class Handler(logging.Handler):
         return None
 
     def close(self) -> None:
-        """"""
+        """Close handler"""

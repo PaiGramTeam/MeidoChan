@@ -3,9 +3,10 @@ from dataclasses import dataclass
 from multiprocessing import RLock as Lock
 from typing import Any, Mapping, Optional, TYPE_CHECKING
 
+from meido.utils.log._handler import Handler
 from typing_extensions import Self
 
-from meido.utils.log import LoggerConfig
+from meido.utils.log._config import LoggerConfig
 from meido.utils.typedefs import ArgsType, ExcInfoType
 
 if TYPE_CHECKING:
@@ -53,6 +54,16 @@ class Logger(logging.Logger, metaclass=LoggerMeta):
         self.handlers = []
         self.extras: dict[str, Any] | None = None
         self._config = config
+        self.addHandler(
+            Handler(
+                width=config.width,
+                color_system=config.color_system,
+                omit_repeated_times=config.omit_repeated_times,
+                project_root=config.project_root,
+                time_format=config.time_format,
+                traceback_configs=config.traceback,
+            )
+        )
 
     def opt(
         self,
@@ -83,7 +94,7 @@ class Logger(logging.Logger, metaclass=LoggerMeta):
         stack_info: bool = False,
         stacklevel: int = 1,
     ) -> None:
-        extra = self.extras | (extra or {})
+        extra = (self.extras or {}) | (extra or {})
         self.extras = None
         # noinspection PyProtectedMember
         return super()._log(level, msg, args, exc_info, extra, stack_info)
