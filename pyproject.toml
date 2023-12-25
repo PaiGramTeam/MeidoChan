@@ -21,6 +21,7 @@ dependencies = [
     "Jinja2>=3.1.2",
     "sqlmodel>=0.0.14",
     "pydantic<2.0.0,>=1.10.13",
+    "redis>=5.0.1",
 ]
 requires-python = ">=3.11,<4.0"
 readme = "README.md"
