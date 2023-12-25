@@ -37,6 +37,6 @@ includes = ["meido", "pyproject.toml", "README.md", "LICENSE"]
 package-type = "library"
 
 [tool.black]
-line-length = 88
+line-length = 120
 target-version = ['py311']
 include = '\.pyi?$'
