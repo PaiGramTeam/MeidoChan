@@ -1,6 +1,6 @@
 from enum import Enum
 from pathlib import Path
-from typing import List, Optional, Union, Set
+from typing import List, Optional, Set
 
 import dotenv
 from pydantic import AnyUrl, Field

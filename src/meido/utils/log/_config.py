@@ -4,7 +4,7 @@ from typing import List, Literal, Optional, Union
 
 from pydantic import BaseSettings
 
-from utils.const import PROJECT_ROOT
+from meido.utils.const import PROJECT_ROOT
 
 __all__ = ("LoggerConfig",)
 

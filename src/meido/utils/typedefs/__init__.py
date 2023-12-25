@@ -1,8 +1,8 @@
 import sys
 from typing import Any, Callable, Dict, Optional, TYPE_CHECKING, Tuple, Type, Union
 
-from utils.typedefs._generics import *
-from utils.typedefs._queue import AsyncQueue, BaseQueue, SyncQueue
+from meido.utils.typedefs._generics import *
+from meido.utils.typedefs._queue import AsyncQueue, BaseQueue, SyncQueue
 
 if sys.version_info >= (3, 9):
     from types import GenericAlias

@@ -19,16 +19,12 @@ from rich.table import Table
 from rich.text import Text, TextType
 from rich.theme import Theme
 
-from utils.log._file import FileIO
-from utils.log._style import DEFAULT_STYLE
-from utils.log._traceback import Traceback
+from meido.utils.log._file import FileIO
+from meido.utils.log._style import DEFAULT_STYLE
+from meido.utils.log._traceback import Traceback
 
-try:
-    import ujson as jsonlib
-    from ujson import JSONDecodeError
-except ImportError:
-    import json as jsonlib
-    from json import JSONDecodeError
+import ujson as jsonlib
+from ujson import JSONDecodeError
 
 if TYPE_CHECKING:
     from rich.console import (

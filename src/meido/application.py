@@ -25,9 +25,9 @@ from meido.handler.limiterhandler import LimiterHandler
 from meido.manager import Managers
 from meido.override.telegram import HTTPXRequest
 from meido.ratelimiter import RateLimiter
-from utils.const import WRAPPER_ASSIGNMENTS
-from utils.log import logger
-from utils.models.signal import Singleton
+from meido.utils.const import WRAPPER_ASSIGNMENTS
+from meido.utils.log import logger
+from meido.utils.models.signal import Singleton
 
 if TYPE_CHECKING:
     from asyncio import Task

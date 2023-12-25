@@ -22,8 +22,8 @@ from rich.traceback import (
     Traceback as BaseTraceback,
 )
 
-from core.config import config
-from utils.log._style import MonokaiProStyle
+from meido.config import config
+from meido.utils.log._style import MonokaiProStyle
 
 if TYPE_CHECKING:
     from rich.console import ConsoleRenderable

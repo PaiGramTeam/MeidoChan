@@ -1,10 +1,6 @@
 import enum
 
-try:
-    import ujson as jsonlib
-except ImportError:
-    import json as jsonlib
-
+import ujson as jsonlib
 from pydantic import BaseSettings
 
 __all__ = ("RegionEnum", "Settings")

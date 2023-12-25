@@ -9,9 +9,9 @@ from typing_extensions import ParamSpec
 
 from meido.base_service import BaseServiceType, ComponentType, DependenceType, get_all_services
 from meido.config import config as bot_config
-from utils.const import PLUGIN_DIR, PROJECT_ROOT
-from utils.helpers import gen_pkg
-from utils.log import logger
+from meido.utils.const import PLUGIN_DIR, PROJECT_ROOT
+from meido.utils.helpers import gen_pkg
+from meido.utils.log import logger
 
 if TYPE_CHECKING:
     from meido.application import Application

@@ -1,17 +1,14 @@
 """线程安全的队列"""
 
 import asyncio
-import sys
-from asyncio import QueueEmpty as AsyncQueueEmpty
-from asyncio import QueueFull as AsyncQueueFull
+from asyncio import QueueEmpty as AsyncQueueEmpty, QueueFull as AsyncQueueFull
 from collections import deque
 from heapq import heappop, heappush
-from queue import Empty as SyncQueueEmpty
-from queue import Full as SyncQueueFull
+from queue import Empty as SyncQueueEmpty, Full as SyncQueueFull
 from threading import Condition, Lock
-from typing import TYPE_CHECKING, Any, Callable, Deque, Generic, List, NoReturn, Optional, Set, TypeVar
+from typing import Any, Callable, Deque, Generic, List, Optional, Set, TYPE_CHECKING, TypeVar
 
-from utils.typedefs import AsyncQueue, SyncQueue
+from meido.utils.typedefs import AsyncQueue, SyncQueue
 
 if TYPE_CHECKING:
     from asyncio import AbstractEventLoop as EventLoop

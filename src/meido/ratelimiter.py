@@ -5,7 +5,7 @@ from typing import Callable, Coroutine, Any, Union, List, Dict, Optional, TypeVa
 from telegram.error import RetryAfter
 from telegram.ext import BaseRateLimiter, ApplicationHandlerStop
 
-from utils.log import logger
+from meido.utils.log import logger
 
 JSONDict: Type[dict[str, Any]] = Dict[str, Any]
 RL_ARGS = TypeVar("RL_ARGS")

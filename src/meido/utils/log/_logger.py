@@ -10,13 +10,13 @@ from typing import Any, Callable, List, Mapping, Optional, TYPE_CHECKING, Tuple,
 
 from typing_extensions import Self
 
-from utils.log._handler import FileHandler, Handler
-from utils.typedefs import LogFilterType
+from meido.utils.log._handler import FileHandler, Handler
+from meido.utils.typedefs import LogFilterType
 
 if TYPE_CHECKING:
     from logging import LogRecord
 
-    from utils.log._config import LoggerConfig
+    from meido.utils.log._config import LoggerConfig
 
 __all__ = ("Logger", "LogFilter")
 
