@@ -1,12 +1,16 @@
 from enum import Enum
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Set
 
 import dotenv
-import ujson as jsonlib
-from pydantic import AnyUrl, BaseSettings, Field
+from pydantic import AnyUrl, Field, BaseSettings
 
 from meido.utils.const import PROJECT_ROOT
+
+try:
+    import ujson as jsonlib
+except ImportError:
+    import json as jsonlib
 
 __all__ = ("ApplicationConfig", "config", "JoinGroups")
 
