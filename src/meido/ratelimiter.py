@@ -1,6 +1,7 @@
+"""This module contains an implementation of the BaseRateLimiter"""
 import asyncio
 import contextlib
-from typing import Callable, Coroutine, Any, Union, List, Dict, Optional, TypeVar, Type
+from typing import Callable, Coroutine, Any, Union, List, Dict, Optional, Type
 
 from telegram.error import RetryAfter
 from telegram.ext import BaseRateLimiter, ApplicationHandlerStop
@@ -8,7 +9,6 @@ from telegram.ext import BaseRateLimiter, ApplicationHandlerStop
 from meido.utils.log import logger
 
 JSONDict: Type[dict[str, Any]] = Dict[str, Any]
-RL_ARGS = TypeVar("RL_ARGS")
 
 
 class RateLimiter(BaseRateLimiter[int]):
@@ -30,7 +30,7 @@ class RateLimiter(BaseRateLimiter[int]):
         kwargs: Dict[str, Any],
         endpoint: str,
         data: Dict[str, Any],
-        rate_limit_args: Optional[RL_ARGS],
+        rate_limit_args: Optional[int],
     ) -> Union[bool, JSONDict, List[JSONDict]]:
         chat_id = data.get("chat_id")
 
