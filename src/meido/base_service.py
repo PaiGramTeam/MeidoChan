@@ -4,7 +4,7 @@ from typing import ClassVar, Iterable, Type, TypeVar
 
 from typing_extensions import Self
 
-from utils.helpers import isabstract
+from meido.utils.helpers import isabstract
 
 __all__ = ("BaseService", "BaseServiceType", "DependenceType", "ComponentType", "get_all_services")
 
