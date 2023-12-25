@@ -3,15 +3,30 @@ from pathlib import Path
 from typing import List, Optional, Set
 
 import dotenv
-from pydantic import AnyUrl, Field
+from pydantic import AnyUrl, Field, BaseSettings
 
-from meido.basemodel import Settings
 from meido.utils.const import PROJECT_ROOT
 from meido.utils.typedefs import NaturalNumber
+
+try:
+    import ujson as jsonlib
+except ImportError:
+    import json as jsonlib
 
 __all__ = ("ApplicationConfig", "config", "JoinGroups")
 
 dotenv.load_dotenv(dotenv_path=dotenv.find_dotenv(usecwd=True))
+
+
+class Settings(BaseSettings):
+    def __new__(cls, *args, **kwargs):
+        cls.update_forward_refs()
+        return super(Settings, cls).__new__(cls)  # pylint: disable=E1120
+
+    class Config(BaseSettings.Config):
+        case_sensitive = False
+        json_loads = jsonlib.loads
+        json_dumps = jsonlib.dumps
 
 
 class JoinGroups(str, Enum):
@@ -97,13 +112,6 @@ class ReloadConfig(Settings):
         env_prefix = "reload_"
 
 
-class NoticeConfig(Settings):
-    user_mismatch: str = "再乱点我叫西风骑士团、千岩军、天领奉行、三十人团和逐影庭了！"
-
-    class Config(Settings.Config):
-        env_prefix = "notice_"
-
-
 class ApplicationConfig(Settings):
     debug: bool = False
     """debug 开关"""
@@ -121,18 +129,8 @@ class ApplicationConfig(Settings):
     """Telegram API URL"""
     bot_base_file_url: str = "https://api.telegram.org/file/bot"
     """Telegram API File URL"""
-    bot_official: List[str] = ["PaimonMasterBot", "HonkaiStarRail_ZH_Bot"]
-    """PaiGramTeam Bot"""
 
     owner: Optional[int] = None
-
-    channels: List[int] = []
-    """文章推送群组"""
-
-    verify_groups: Set[int] = set()
-    """启用群验证功能的群组"""
-    join_groups: Optional[JoinGroups] = JoinGroups.NO_ALLOW
-    """是否允许机器人被邀请到其它群组"""
 
     timeout: int = 10
     connection_pool_size: int = 256
@@ -159,7 +157,6 @@ class ApplicationConfig(Settings):
     redis: RedisConfig = RedisConfig()
     mtproto: MTProtoConfig = MTProtoConfig()
     error: ErrorConfig = ErrorConfig()
-    notice: NoticeConfig = NoticeConfig()
 
 
 ApplicationConfig.update_forward_refs()
