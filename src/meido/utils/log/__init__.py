@@ -1,29 +1,30 @@
-import re
 from functools import lru_cache
 from typing import TYPE_CHECKING
 
+import regex as re
+
 from meido.config import config
+from meido.utils.const import PROJECT_ROOT
 from meido.utils.log._config import LoggerConfig
-from meido.utils.log._logger import LogFilter, Logger
+from meido.utils.log._logger import Logger
 
 if TYPE_CHECKING:
     from logging import LogRecord
 
 __all__ = ("logger",)
 
-logger = Logger(
-    LoggerConfig(
-        name=config.logger.name,
-        width=config.logger.width,
-        time_format=config.logger.time_format,
-        traceback_max_frames=config.logger.traceback_max_frames,
-        log_path=config.logger.path,
-        keywords=config.logger.render_keywords,
-        traceback_locals_max_depth=config.logger.locals_max_depth,
-        traceback_locals_max_length=config.logger.locals_max_length,
-        traceback_locals_max_string=config.logger.locals_max_string,
-    )
+logger_config = LoggerConfig(
+    name=config.logger.name,
+    level="DEBUG" if config.debug else "INFO",
+    width=config.logger.width,
+    keywords=config.logger.keywords,
+    time_format=config.logger.time_format,
+    capture_warnings=config.logger.capture_warnings,
+    log_path=config.logger.path,
+    project_root=PROJECT_ROOT,
+    traceback=config.logger.traceback,
 )
+logger = Logger()
 
 
 @lru_cache
@@ -38,8 +39,3 @@ def name_filter(record: "LogRecord") -> bool:
     根据当前的 record 的 name 判断是否需要打印。如果应该打印，则返回 True;否则返回 False。
     """
     return _whitelist_name_filter(record.name)
-
-
-log_filter = LogFilter()
-log_filter.add_filter(name_filter)
-logger.addFilter(log_filter)

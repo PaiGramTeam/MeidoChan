@@ -1,5 +1,5 @@
 import sys
-from typing import Any, Callable, Dict, Optional, TYPE_CHECKING, Tuple, Type, Union
+from typing import Any, Callable, Dict, Mapping, Optional, TYPE_CHECKING, Tuple, Type, TypeAlias, Union
 
 from meido.utils.typedefs._generics import *
 from meido.utils.typedefs._queue import AsyncQueue, BaseQueue, SyncQueue
@@ -29,6 +29,8 @@ __all__ = [
     "P",
     "T",
     "R",
+    "ArgsType",
+    "ExcInfoType",
 ]
 
 if TYPE_CHECKING:
@@ -60,6 +62,9 @@ else:
 
 StrOrInt = Union[str, int]
 
-ExceptionInfoType = Union[bool, SysExcInfoType, BaseException]
 JSONDict = Dict[str, Any]
 JSONType = Union[JSONDict, list]
+
+ArgsType: TypeAlias = tuple[object, ...] | Mapping[str, object]
+ExcInfoType: TypeAlias = None | bool | SysExcInfoType | BaseException
+ExceptionInfoType = ExcInfoType
