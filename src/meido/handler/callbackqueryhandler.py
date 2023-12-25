@@ -5,7 +5,7 @@ from typing import TypeVar, TYPE_CHECKING, Any, Optional, Type
 
 from telegram.ext import CallbackQueryHandler as BaseCallbackQueryHandler, ApplicationHandlerStop
 
-from utils.log import logger
+from meido.utils.log import logger
 
 if TYPE_CHECKING:
     from telegram.ext import Application

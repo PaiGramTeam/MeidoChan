@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TypedDict
 
-from gram_core.base_service import BaseService
+from meido.base_service import BaseService
 
 try:
     from pyrogram import Client

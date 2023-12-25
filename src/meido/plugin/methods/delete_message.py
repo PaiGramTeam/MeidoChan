@@ -4,7 +4,7 @@ from telegram import Chat, Message
 from telegram.error import Forbidden, NetworkError
 from telegram.ext import CallbackContext, Job
 
-from utils.log import logger
+from meido.utils.log import logger
 
 if TYPE_CHECKING:
     from . import PluginFuncMethods

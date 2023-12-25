@@ -6,7 +6,7 @@ from telegram.ext import ApplicationHandlerStop, BaseHandler
 
 from meido.error import ServiceNotFoundError
 from meido.services.users.services import UserAdminService
-from utils.log import logger
+from meido.utils.log import logger
 
 if TYPE_CHECKING:
     from meido.application import Application

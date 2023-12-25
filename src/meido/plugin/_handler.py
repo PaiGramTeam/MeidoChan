@@ -28,7 +28,7 @@ from telegram.ext.filters import BaseFilter
 from typing_extensions import ParamSpec
 
 from meido.handler.callbackqueryhandler import CallbackQueryHandler
-from utils.const import WRAPPER_ASSIGNMENTS as _WRAPPER_ASSIGNMENTS
+from meido.utils.const import WRAPPER_ASSIGNMENTS as _WRAPPER_ASSIGNMENTS
 
 if TYPE_CHECKING:
     from meido.builtins.dispatcher import AbstractDispatcher

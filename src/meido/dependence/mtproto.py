@@ -6,7 +6,7 @@ import aiofiles
 
 from meido.base_service import BaseService
 from meido.config import config as bot_config
-from utils.log import logger
+from meido.utils.log import logger
 
 try:
     from pyrogram import Client

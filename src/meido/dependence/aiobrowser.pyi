@@ -2,7 +2,7 @@ from asyncio import AbstractEventLoop
 
 from playwright.async_api import Browser, Playwright as AsyncPlaywright
 
-from gram_core.base_service import BaseService
+from meido.base_service import BaseService
 
 __all__ = ("AioBrowser",)
 

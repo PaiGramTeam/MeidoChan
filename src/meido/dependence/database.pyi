@@ -4,8 +4,8 @@ from sqlalchemy import URL
 from sqlalchemy.ext.asyncio import async_sessionmaker, async_scoped_session, AsyncEngine
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from gram_core.base_service import BaseService
-from gram_core.config import ApplicationConfig
+from meido.base_service import BaseService
+from meido.config import ApplicationConfig
 
 class Database(BaseService.Dependence):
     _url: URL

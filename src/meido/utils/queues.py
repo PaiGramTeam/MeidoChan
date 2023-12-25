@@ -60,9 +60,6 @@ class Queue(Generic[T]):
         self.all_tasks_done = Condition(self.sync_mutex)
 
         self.async_mutex = asyncio.Lock()
-        if sys.version_info[:3] == (3, 10, 0):
-            # 针对 3.10 的 bug
-            getattr(self.async_mutex, "_get_loop", lambda: None)()
         self.async_not_empty = asyncio.Condition(self.async_mutex)
         self.async_not_full = asyncio.Condition(self.async_mutex)
         self.finished = asyncio.Event()

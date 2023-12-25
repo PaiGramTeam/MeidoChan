@@ -4,7 +4,7 @@ from typing import TypeVar, Optional
 from telegram import Update
 from telegram.ext import ContextTypes, ApplicationHandlerStop, TypeHandler
 
-from utils.log import logger
+from meido.utils.log import logger
 
 UT = TypeVar("UT")
 CCT = TypeVar("CCT", bound="CallbackContext[Any, Any, Any, Any]")

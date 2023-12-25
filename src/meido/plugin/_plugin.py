@@ -27,9 +27,9 @@ from typing_extensions import ParamSpec
 from meido.handler.adminhandler import AdminHandler
 from meido.plugin._funcs import ConversationFuncs, PluginFuncs
 from meido.plugin._handler import ConversationDataType
-from utils.const import WRAPPER_ASSIGNMENTS
-from utils.helpers import isabstract
-from utils.log import logger
+from meido.utils.const import WRAPPER_ASSIGNMENTS
+from meido.utils.helpers import isabstract
+from meido.utils.log import logger
 
 if TYPE_CHECKING:
     from meido.application import Application
