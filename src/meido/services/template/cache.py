@@ -4,7 +4,7 @@ from hashlib import sha256
 from typing import Any, Optional
 
 from meido.base_service import BaseService
-from meido.dependence.redisdb import RedisDB
+from meido.dependence.redis import Redis
 
 __all__ = ["TemplatePreviewCache", "HtmlToFileIdCache"]
 
@@ -12,7 +12,7 @@ __all__ = ["TemplatePreviewCache", "HtmlToFileIdCache"]
 class TemplatePreviewCache(BaseService.Component):
     """暂存渲染模板的数据用于预览"""
 
-    def __init__(self, redis: RedisDB):
+    def __init__(self, redis: Redis):
         self.client = redis.client
         self.qname = "bot:template:preview"
 
@@ -35,7 +35,7 @@ class TemplatePreviewCache(BaseService.Component):
 class HtmlToFileIdCache(BaseService.Component):
     """html to file_id 的缓存"""
 
-    def __init__(self, redis: RedisDB):
+    def __init__(self, redis: Redis):
         self.client = redis.client
         self.qname = "bot:template:html-to-file-id"
 

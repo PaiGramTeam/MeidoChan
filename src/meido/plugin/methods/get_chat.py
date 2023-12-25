@@ -2,7 +2,7 @@ from typing import Union, Optional, TYPE_CHECKING
 
 from telegram import Chat
 
-from meido.dependence.redisdb import RedisDB
+from meido.dependence.redis import Redis
 
 if TYPE_CHECKING:
     from . import PluginFuncMethods
@@ -17,11 +17,11 @@ class GetChat:
     async def get_chat(
         self: "PluginFuncMethods",
         chat_id: Union[str, int],
-        redis_db: Optional[RedisDB] = None,
+        redis_db: Optional[Redis] = None,
         expire: int = 86400,
     ) -> Chat:
         application = self.application
-        redis_db: RedisDB = redis_db or self.application.managers.dependency_map.get(RedisDB, None)
+        redis_db: Redis = redis_db or self.application.managers.dependency_map.get(Redis, None)
 
         if not redis_db:
             return await application.bot.get_chat(chat_id)

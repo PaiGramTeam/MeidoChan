@@ -2,7 +2,7 @@ from typing import List, Union
 
 from meido.base_service import BaseService
 from meido.basemodel import RegionEnum
-from meido.dependence.redisdb import RedisDB
+from meido.dependence.redis import Redis
 from meido.services.cookies.error import CookiesCachePoolExhausted
 from utils.error import RegionNotFoundError
 
@@ -12,7 +12,7 @@ __all__ = ("PublicCookiesCache",)
 class PublicCookiesCache(BaseService.Component):
     """使用优先级(score)进行排序，对使用次数最少的Cookies进行审核"""
 
-    def __init__(self, redis: RedisDB):
+    def __init__(self, redis: Redis):
         self.client = redis.client
         self.score_qname = "cookie:public"
         self.user_times_qname = "cookie:public:times"

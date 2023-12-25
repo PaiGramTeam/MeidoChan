@@ -1,18 +1,17 @@
 from typing import Optional, Union
 
 import fakeredis.aioredis
-from redis import asyncio as aioredis
-from redis.exceptions import ConnectionError as RedisConnectionError, TimeoutError as RedisTimeoutError
+from meido.utils.aioredis import aioredis, RedisTimeoutError, RedisConnectionError
 from typing_extensions import Self
 
 from meido.base_service import BaseService
 from meido.config import ApplicationConfig
 from meido.utils.log import logger
 
-__all__ = ["RedisDB"]
+__all__ = ("Redis", )
 
 
-class RedisDB(BaseService.Dependence):
+class Redis(BaseService.Dependence):
     @classmethod
     def from_config(cls, config: ApplicationConfig) -> Self:
         return cls(**config.redis.dict())
