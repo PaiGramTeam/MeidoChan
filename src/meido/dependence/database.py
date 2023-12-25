@@ -1,11 +1,10 @@
-import contextlib
-from typing import Optional
+from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager
+from typing import Optional, Self
 
-from sqlalchemy.engine import URL
-from sqlalchemy.ext.asyncio import create_async_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import URL
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncEngine
 from sqlmodel.ext.asyncio.session import AsyncSession
-from typing_extensions import Self
 
 from meido.base_service import BaseService
 from meido.config import ApplicationConfig
@@ -27,25 +26,24 @@ class Database(BaseService.Dependence):
         password: Optional[str] = None,
         database: Optional[str] = None,
     ):
-        self.database = database  # skipcq: PTC-W0052
-        self.password = password
-        self.username = username
-        self.port = port
-        self.host = host
-        self.url = URL.create(
+        self._url = URL.create(
             driver_name,
-            username=self.username,
-            password=self.password,
-            host=self.host,
-            port=self.port,
-            database=self.database,
+            username=username,
+            password=password,
+            host=host,
+            port=port,
+            database=database,
         )
-        self.engine = create_async_engine(self.url)
-        self.Session = sessionmaker(bind=self.engine, class_=AsyncSession)
+        self._engine = create_async_engine(self._url)
+        self._session = async_sessionmaker(
+            bind=self._engine,
+            class_=AsyncSession,
+        )
 
-    @contextlib.asynccontextmanager
-    async def session(self) -> AsyncSession:
-        yield self.Session()
+    @property
+    def engine(self) -> AsyncEngine:
+        return self._engine
 
-    async def shutdown(self):
-        self.Session.close_all()
+    @asynccontextmanager
+    async def session(self):
+        yield self._session()
