@@ -50,7 +50,7 @@ class Rotation:
         elif isinstance(rotation, datetime.timedelta):
             step_forward = partial(Rotation.forward_interval, interval=rotation)
             self._rotation = Rotation.RotationTime(step_forward)
-        elif isinstance(rotation, Callable):
+        elif callable(rotation):
             self._rotation = rotation
         else:
             raise TypeError("Cannot infer rotation for objects of type: '%s'" % type(rotation).__name__)

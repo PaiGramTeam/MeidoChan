@@ -25,7 +25,7 @@ class Retention:
             self._retention = partial(Retention.retention_age, seconds=retention.total_seconds())
         elif isinstance(retention, int):
             self._retention = partial(Retention.retention_count, number=retention)
-        elif isinstance(retention, Callable):
+        elif callable(retention):
             self._retention = retention
         else:
             raise TypeError("Cannot infer retention for objects of type: '%s'" % type(retention).__name__)
