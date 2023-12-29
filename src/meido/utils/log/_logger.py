@@ -1,12 +1,11 @@
 import logging
-from dataclasses import dataclass
 from multiprocessing import RLock as Lock
 from typing import Any, Mapping, Optional, TYPE_CHECKING
 
-from meido.utils.log._handler import Handler
 from typing_extensions import Self
 
 from meido.utils.log._config import LoggerConfig
+from meido.utils.log._handler import Handler
 from meido.utils.typedefs import ArgsType, ExcInfoType
 
 if TYPE_CHECKING:
@@ -26,14 +25,6 @@ class LoggerMeta(type):
             else:
                 cls._instance.warning("A Logger instance already exists.")
         return cls._instance
-
-
-@dataclass
-class LoggerTracebackConfig:
-    max_frames: int = 20
-    trace_locals_max_depth: int | None = None
-    trace_locals_max_length: int = 10
-    trace_locals_max_string: int = 80
 
 
 class Logger(logging.Logger, metaclass=LoggerMeta):

@@ -13,8 +13,8 @@ from rich.table import Table
 from rich.text import Text
 from rich.theme import Theme
 
+from meido.config import LogTracebackConfig
 from meido.utils.const import PROJECT_ROOT
-from meido.utils.log._config import LogTracebackConfig
 from meido.utils.log._style import DEFAULT_STYLE
 from meido.utils.log._traceback import Traceback
 

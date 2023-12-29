@@ -12,7 +12,7 @@ try:
 except ImportError:
     import json as jsonlib
 
-__all__ = ("ApplicationConfig", "config", "JoinGroups")
+__all__ = ("ApplicationConfig", "config", "JoinGroups", "LogTracebackConfig")
 
 dotenv.load_dotenv(dotenv_path=dotenv.find_dotenv(usecwd=True))
 

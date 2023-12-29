@@ -1,38 +1,14 @@
-import datetime
 import os
 import shutil
 from collections.abc import Callable
 from functools import partial
+from pathlib import Path
 from typing import Optional
 
 from meido.utils.log._ctime import get_ctime
-from meido.utils.log.log_file._datetime import aware_now
+from meido.utils.log.log_file._path import generate_rename_path
 
 __all__ = ("Compression",)
-
-
-class FileDateFormatter:
-    def __init__(self, _datetime: datetime.datetime | None = None) -> None:
-        self.datetime = _datetime or aware_now()
-
-    def __format__(self, spec: str) -> str:
-        if not spec:
-            spec = "%Y-%m-%d_%H-%M-%S_%f"
-        return self.datetime.__format__(spec)
-
-
-def generate_rename_path(root, ext, creation_time):
-    creation_datetime = datetime.datetime.fromtimestamp(creation_time)
-    date = FileDateFormatter(creation_datetime)
-
-    renamed_path = "{}.{}{}".format(root, date, ext)
-    counter = 1
-
-    while os.path.exists(renamed_path):
-        counter += 1
-        renamed_path = "{}.{}.{}{}".format(root, date, counter, ext)
-
-    return renamed_path
 
 
 class Compression:
@@ -102,9 +78,10 @@ class Compression:
         else:
             raise TypeError("Cannot infer compression for objects of type: '%s'" % type(compression).__name__)
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, path: str | Path):
         if self._compression is not None:
-            return self._compression(*args, **kwargs)
+            return self._compression(path)
+        return path
 
     @staticmethod
     def add_compress(path_in, path_out, opener, **kwargs):
