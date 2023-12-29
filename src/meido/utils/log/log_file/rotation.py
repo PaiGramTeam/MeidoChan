@@ -6,7 +6,7 @@ from functools import partial
 from numbers import Real
 
 from meido.utils.log import _parsers as string_parsers
-from meido.utils.log._ctime import get_ctime, set_ctime
+from meido.utils.log.log_file._ctime import get_ctime, set_ctime
 
 __all__ = ("Rotation",)
 

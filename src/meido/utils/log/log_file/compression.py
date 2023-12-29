@@ -5,7 +5,7 @@ from functools import partial
 from pathlib import Path
 from typing import Optional
 
-from meido.utils.log._ctime import get_ctime
+from meido.utils.log.log_file._ctime import get_ctime
 from meido.utils.log.log_file._path import generate_rename_path
 
 __all__ = ("Compression",)

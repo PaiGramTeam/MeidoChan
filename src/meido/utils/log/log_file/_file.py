@@ -8,7 +8,7 @@ from stat import ST_DEV, ST_INO
 from types import TracebackType
 from typing import AnyStr, IO, Iterable, Iterator, Optional
 
-from meido.utils.log._ctime import get_ctime, set_ctime
+from meido.utils.log.log_file._ctime import get_ctime, set_ctime
 from meido.utils.log.log_file._datetime import FileDateFormatter
 from meido.utils.log.log_file._path import generate_rename_path
 from meido.utils.log.log_file.compression import Compression
