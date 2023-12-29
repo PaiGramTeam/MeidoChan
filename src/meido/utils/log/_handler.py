@@ -26,8 +26,7 @@ if TYPE_CHECKING:
 def resolve_log_path(path: str | Path, root: Path = Path(os.curdir).resolve()) -> str:
     if path != "<input>":
         try:
-            path = str(Path(path).relative_to(root))
-            path = path.split(".")[0].replace(os.sep, ".")
+            path = str(Path(path).relative_to(root).with_suffix("")).replace(os.sep, ".")
         except ValueError:
             import site
 
@@ -36,7 +35,7 @@ def resolve_log_path(path: str | Path, root: Path = Path(os.curdir).resolve()) -
                 try:
                     path = str(Path(path).relative_to(Path(s)))
                     break
-                except ValueError:
+                except (ValueError, TypeError):
                     continue
             if path is None:
                 path = "<SITE>"

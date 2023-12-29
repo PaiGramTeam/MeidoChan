@@ -25,7 +25,7 @@ logger_config = LoggerConfig(
     project_root=PROJECT_ROOT,
     traceback=config.logger.traceback,
 )
-logger = Logger()
+logger = Logger(config=logger_config)
 
 
 @lru_cache
