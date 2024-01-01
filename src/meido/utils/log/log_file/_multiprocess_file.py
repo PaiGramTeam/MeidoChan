@@ -8,7 +8,7 @@ from typing import AnyStr, Callable, IO, Iterable, Iterator
 
 from meido.utils.log.log_file._file import LogFile
 
-__all__ = ("MultiProcessFile", )
+__all__ = ("MultiProcessFile",)
 
 
 def _process(queue: Queue, event: EventType, file: LogFile) -> None:
