@@ -3,10 +3,10 @@ import glob
 import os
 import string
 from collections.abc import Callable
+from io import StringIO
 from pathlib import Path
 from stat import ST_DEV, ST_INO
-from types import TracebackType
-from typing import AnyStr, IO, Iterable, Iterator, Optional
+from typing import AnyStr, IO
 
 from meido.utils.log.log_file._ctime import get_ctime, set_ctime
 from meido.utils.log.log_file._datetime import FileDateFormatter
@@ -29,7 +29,7 @@ def _make_glob_patterns(path: Path) -> list[str]:
     return [escaped, escaped + ".*", root + ".*" + ext, root + ".*" + ext + ".*"]
 
 
-class LogFile(IO[str]):
+class LogFile(StringIO):
     """日志文件类"""
 
     def _create_path(self) -> Path:
@@ -155,59 +155,5 @@ class LogFile(IO[str]):
         self._reopen_if_needed()
         self._terminate_file(is_rotating=False)
 
-    def fileno(self) -> int:
-        return self._file.fileno()
-
     def flush(self) -> None:
         return self._file.flush()
-
-    def isatty(self) -> bool:
-        return self._file.isatty()
-
-    def read(self, n: int = -1) -> AnyStr:
-        return self._file.read(n)
-
-    def readable(self) -> bool:
-        return self._file.readable()
-
-    def readline(self, limit: int = ...) -> AnyStr:
-        return self._file.readline()
-
-    # noinspection SpellCheckingInspection
-    def readlines(self, hint: int = ...) -> list[AnyStr]:
-        return self._file.readlines()
-
-    def seek(self, offset: int, whence: int = 0) -> int:
-        return self._file.seek(offset, whence)
-
-    def seekable(self) -> bool:
-        return self._file.seekable()
-
-    def tell(self) -> int:
-        return self._file.tell()
-
-    def truncate(self, size: Optional[int] = None) -> int:
-        return self._file.truncate(size)
-
-    def writable(self) -> bool:
-        return self._file.writable()
-
-    def writelines(self, lines: Iterable[AnyStr]) -> None:
-        return self._file.writelines(lines)
-
-    def __next__(self) -> AnyStr:
-        return self._file.__next__()
-
-    def __iter__(self) -> Iterator[AnyStr]:
-        return self._file.__iter__()
-
-    def __enter__(self) -> IO[AnyStr]:
-        return self._file.__enter__()
-
-    def __exit__(
-        self,
-        exception_type: type[BaseException] | None,
-        exception: BaseException | None,
-        exception_traceback: TracebackType | None,
-    ) -> None:
-        return self._file.__exit__(exception_type, exception, exception_traceback)

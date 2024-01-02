@@ -1,10 +1,11 @@
 import datetime
 import multiprocessing
 import sys
+from io import StringIO
 from multiprocessing import Queue, Value
 from pathlib import Path
 from types import TracebackType
-from typing import Any, AnyStr, Callable, IO, Iterable, Iterator, Mapping
+from typing import Any, AnyStr, Callable, IO, Mapping
 
 from meido.utils.log.log_file._file import LogFile
 
@@ -103,7 +104,7 @@ class Process(multiprocessing.Process):
         file.close()
 
 
-class MultiProcessFile(IO[str]):
+class MultiProcessFile(StringIO):
     def __init__(
         self,
         path: str | Path,
@@ -138,54 +139,8 @@ class MultiProcessFile(IO[str]):
         if self._process.is_alive():
             self._process.close()
 
-    def fileno(self) -> int:
-        return self._get_file().fileno()
-
     def flush(self) -> None:
-        return self._get_file().flush()
-
-    def isatty(self) -> bool:
-        return self._get_file().isatty()
-
-    def read(self, n: int = -1) -> AnyStr:
-        return self._get_file().read(n)
-
-    def readable(self) -> bool:
-        return self._get_file().readable()
-
-    def readline(self, limit: int = ...) -> AnyStr:
-        return self._get_file().readline()
-
-    # noinspection SpellCheckingInspection
-    def readlines(self, hint: int = ...) -> list[AnyStr]:
-        return self._get_file().readlines()
-
-    def seek(self, offset: int, whence: int = 0) -> int:
-        return self._get_file().seek(offset, whence)
-
-    def seekable(self) -> bool:
-        return self._get_file().seekable()
-
-    def tell(self) -> int:
-        return self._get_file().tell()
-
-    def truncate(self, size: int | None = None) -> int:
-        return self._get_file().truncate(size)
-
-    def writable(self) -> bool:
-        return self._get_file().writable()
-
-    def writelines(self, lines: Iterable[AnyStr]) -> None:
-        return self._get_file().writelines(lines)
-
-    def __next__(self) -> AnyStr:
-        return self._get_file().__next__()
-
-    def __iter__(self) -> Iterator[AnyStr]:
-        return self._get_file().__iter__()
-
-    def __enter__(self) -> IO[AnyStr]:
-        return self._get_file().__enter__()
+        return self._file.flush()
 
     def __exit__(
         self,
