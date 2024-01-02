@@ -58,9 +58,9 @@ class LogFile(IO[str]):
         self._kwargs = kwargs | {"encoding": "utf-8", "mode": "a", "buffering": 1}
 
         self._glob_patterns = _make_glob_patterns(self._path)
-        self._rotation_function = Rotation(rotation)
-        self._retention_function = Retention(retention)
-        self._compression_function = Compression(compression)
+        self._rotation_function = Rotation(rotation) if rotation is not None else None
+        self._retention_function = Retention(retention) if retention is not None else None
+        self._compression_function = Compression(compression) if compression is not None else None
 
         self._file = None
         self._file_path = None

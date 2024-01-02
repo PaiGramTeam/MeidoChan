@@ -1,23 +1,107 @@
 import datetime
-from multiprocessing import Event, Process
-from multiprocessing.queues import Queue
-from multiprocessing.synchronize import Event as EventType
+import multiprocessing
+import signal
+import sys
+from multiprocessing import Queue, Value
 from pathlib import Path
 from types import TracebackType
-from typing import AnyStr, Callable, IO, Iterable, Iterator
+from typing import Any, AnyStr, Callable, IO, Iterable, Iterator, Mapping
 
 from meido.utils.log.log_file._file import LogFile
+
+if sys.platform != "win32":
+    from multiprocessing.popen_spawn_posix import Popen as _BasePopen
+else:
+    from multiprocessing.popen_spawn_win32 import Popen as _BasePopen
 
 __all__ = ("MultiProcessFile",)
 
 
-def _process(queue: Queue, event: EventType, file: LogFile) -> None:
-    while event.is_set():
-        if queue.empty():
-            continue
-        string = queue.get()
-        file.write(string)
-    file.close()
+class Popen(_BasePopen):
+    def __init__(self, process_obj: "Process"):
+        self._fds = []
+        self._value = process_obj.value
+        super().__init__(process_obj)
+
+    if sys.platform == "win32":
+        # noinspection PyProtectedMember
+        def wait(self, timeout: float | None = None) -> int | None:
+            import _winapi
+            import signal
+
+            from multiprocessing.popen_spawn_win32 import TERMINATE
+
+            if self.returncode is None:
+                if timeout is None:
+                    msecs = _winapi.INFINITE
+                else:
+                    msecs = max(0, int(timeout * 1000 + 0.5))
+
+                try:
+                    res = _winapi.WaitForSingleObject(int(self._handle), msecs)
+                except KeyboardInterrupt:
+                    res = _winapi.WAIT_OBJECT_0
+                if res == _winapi.WAIT_OBJECT_0:
+                    code = _winapi.GetExitCodeProcess(self._handle)
+                    if code == TERMINATE:
+                        code = -signal.SIGTERM
+                    self.returncode = code
+
+            return self.returncode
+
+    # noinspection PyProtectedMember
+    def _terminate_win32(self):
+        import _winapi
+        from multiprocessing.popen_spawn_win32 import TERMINATE
+
+        if self.returncode is None:
+            try:
+                # noinspection PyUnresolvedReferences
+                _winapi.TerminateProcess(int(self._handle), TERMINATE)
+            except OSError:
+                if self.wait(timeout=1.0) is None:
+                    raise
+
+    def terminate(self):
+        self._value.value = False
+        self.wait()
+        if sys.platform != "win32":
+            super().terminate()
+        else:
+            self._terminate_win32()
+
+
+class Process(multiprocessing.Process):
+    _value: Value
+
+    @property
+    def value(self) -> multiprocessing.Value:
+        return self._value
+
+    def __init__(self, queue: Queue, value: multiprocessing.Value, kwargs: Mapping[str, Any]) -> None:
+        self._value = value
+        self._queue = queue
+        super().__init__(None, None, None, (), kwargs, daemon=True)
+
+    @staticmethod
+    def _Popen(process_obj: "Process"):
+        return Popen(process_obj)
+
+    def run(self):
+        file = LogFile(**self._kwargs)
+
+        def print_to_file():
+            while not self._queue.empty():
+                string = self._queue.get()
+                file.write(string)
+
+        while self.value.value:
+            if self._queue.empty():
+                continue
+            print_to_file()
+
+        print_to_file()
+        file.close()
 
 
 class MultiProcessFile(IO[str]):
@@ -39,9 +123,16 @@ class MultiProcessFile(IO[str]):
         }
         self._queue = Queue()
         self._file = LogFile(**self._kwargs)
-        self._event: EventType = Event()
-        self._event.set()
-        self._process = Process(target=_process, args=(self._queue, self._event, self._file))
+        self._signal: Value = Value("i", 1)
+        self._process = Process(self._queue, self._signal, self._kwargs)
+        signal.signal(signal.SIGTERM, self._handler)
+        self._process.start()
+
+    def _handler(self, *_, **__) -> None:
+        print("killing...")
+        self._signal.value = False
+        if self._process.is_alive():
+            self._process.join(1)
 
     def _get_file(self) -> IO[str]:
         return self._file
@@ -51,7 +142,9 @@ class MultiProcessFile(IO[str]):
         return len(s)
 
     def close(self) -> None:
-        self._event.clear()
+        self._signal.value = False
+        if self._process.is_alive():
+            self._process.close()
 
     def fileno(self) -> int:
         return self._get_file().fileno()
@@ -108,4 +201,8 @@ class MultiProcessFile(IO[str]):
         exception: BaseException | None,
         exception_traceback: TracebackType | None,
     ) -> None:
+        self.close()
         return self._get_file().__exit__(exception_type, exception, exception_traceback)
+
+    def __del__(self) -> None:
+        self.close()
