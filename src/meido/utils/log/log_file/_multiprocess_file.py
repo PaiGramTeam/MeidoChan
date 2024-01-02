@@ -39,7 +39,7 @@ class Popen(_BasePopen):
                 try:
                     res = _winapi.WaitForSingleObject(int(self._handle), msecs)
                 except KeyboardInterrupt:
-                    res = _winapi.WAIT_OBJECT_0
+                    res = None
                 if res == _winapi.WAIT_OBJECT_0:
                     code = _winapi.GetExitCodeProcess(self._handle)
                     if code == TERMINATE:

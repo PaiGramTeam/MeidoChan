@@ -12,7 +12,7 @@ from meido.utils.log._logger import Logger
 if TYPE_CHECKING:
     from logging import LogRecord
 
-__all__ = ("logger", "Logger")
+__all__ = ("logger", "Logger", "Handler")
 
 logger_config = LoggerConfig(
     name=config.logger.name,
