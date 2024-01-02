@@ -1,6 +1,5 @@
 import datetime
 import multiprocessing
-import signal
 import sys
 from multiprocessing import Queue, Value
 from pathlib import Path
@@ -20,7 +19,7 @@ __all__ = ("MultiProcessFile",)
 class Popen(_BasePopen):
     def __init__(self, process_obj: "Process"):
         self._fds = []
-        self._value = process_obj.value
+        self._signal = process_obj.signal
         super().__init__(process_obj)
 
     if sys.platform == "win32":
@@ -63,7 +62,7 @@ class Popen(_BasePopen):
                     raise
 
     def terminate(self):
-        self._value.value = False
+        self._signal.value = False
         self.wait()
         if sys.platform != "win32":
             super().terminate()
@@ -72,14 +71,14 @@ class Popen(_BasePopen):
 
 
 class Process(multiprocessing.Process):
-    _value: Value
+    _signal: Value
 
     @property
-    def value(self) -> multiprocessing.Value:
-        return self._value
+    def signal(self) -> multiprocessing.Value:
+        return self._signal
 
-    def __init__(self, queue: Queue, value: multiprocessing.Value, kwargs: Mapping[str, Any]) -> None:
-        self._value = value
+    def __init__(self, queue: Queue, signal: multiprocessing.Value, kwargs: Mapping[str, Any]) -> None:
+        self._signal = signal
         self._queue = queue
         super().__init__(None, None, None, (), kwargs, daemon=True)
 
@@ -95,7 +94,7 @@ class Process(multiprocessing.Process):
                 string = self._queue.get()
                 file.write(string)
 
-        while self.value.value:
+        while self.signal.value:
             if self._queue.empty():
                 continue
             print_to_file()
@@ -125,14 +124,7 @@ class MultiProcessFile(IO[str]):
         self._file = LogFile(**self._kwargs)
         self._signal: Value = Value("i", 1)
         self._process = Process(self._queue, self._signal, self._kwargs)
-        signal.signal(signal.SIGTERM, self._handler)
         self._process.start()
-
-    def _handler(self, *_, **__) -> None:
-        print("killing...")
-        self._signal.value = False
-        if self._process.is_alive():
-            self._process.join(1)
 
     def _get_file(self) -> IO[str]:
         return self._file
