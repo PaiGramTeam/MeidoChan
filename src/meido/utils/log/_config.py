@@ -3,7 +3,7 @@ from typing import List, Literal, Optional, Union
 
 from pydantic import BaseSettings
 
-from meido.config import LogTracebackConfig
+from meido.config import LogTracebackConfig, Settings
 from meido.utils.const import PROJECT_ROOT
 
 __all__ = ("LoggerConfig",)
@@ -15,6 +15,9 @@ class LoggerConfig(BaseSettings):
     level: Optional[Union[str, int]] = None
     """logger 的 level"""
 
+    multiprocess: bool = True
+    """是否启用多进程"""
+
     width: Optional[int] = None
     """输出时的宽度"""
     keywords: List[str] = []
@@ -22,6 +25,7 @@ class LoggerConfig(BaseSettings):
     time_format: str = "[%Y-%m-%d %X]"
     """时间格式"""
     omit_repeated_times: bool = True
+    """是否忽略重复的时间"""
     capture_warnings: bool = True
     """是否捕获 warning"""
     color_system: Literal["auto", "standard", "256", "truecolor", "windows"] = "auto"

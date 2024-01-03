@@ -1,10 +1,10 @@
-import io
 import logging
 import os
-import sys
-import traceback
 from inspect import currentframe
+from io import StringIO
 from multiprocessing import RLock as Lock
+from sys import exc_info as get_exc_info
+from traceback import print_stack
 from types import FrameType
 from typing import Any, Mapping, Optional, TYPE_CHECKING
 
@@ -14,8 +14,13 @@ from meido.utils.log._config import LoggerConfig
 from meido.utils.log._handler import Handler
 from meido.utils.typedefs import ArgsType, ExcInfoType
 
+from meido.utils.log.log_file import LogFile, MultiProcessFile
+
 if TYPE_CHECKING:
     from multiprocessing.synchronize import RLock as LockType
+
+__all__ = ("Logger",)
+
 
 logging.addLevelName(25, "SUCCESS")
 
@@ -53,13 +58,38 @@ class Logger(logging.Logger, metaclass=LoggerMeta):
             logging.getLevelName(level or config.level or "INFO"),
         )
         self.handlers = []
-        self.extras: dict[str, Any] | None = None
+        self._extras: dict[str, Any] = {}
         self._config = config
         self.addHandler(
             Handler(
+                level,
                 width=config.width,
                 color_system=config.color_system,
                 omit_repeated_times=config.omit_repeated_times,
+                project_root=config.project_root,
+                time_format=config.time_format,
+                traceback_configs=config.traceback,
+            )
+        )
+        # Debug log
+        self.addHandler(
+            Handler(
+                "DEBUG",
+                file=(MultiProcessFile if config.multiprocess else LogFile)("debug/debug.log"),
+                width=120,
+                omit_repeated_times=True,
+                project_root=config.project_root,
+                time_format=config.time_format,
+                traceback_configs=config.traceback,
+            )
+        )
+        # Error log
+        self.addHandler(
+            Handler(
+                "ERROR",
+                file=(MultiProcessFile if config.multiprocess else LogFile)("error/error.log"),
+                width=120,
+                omit_repeated_times=True,
                 project_root=config.project_root,
                 time_format=config.time_format,
                 traceback_configs=config.traceback,
@@ -73,7 +103,7 @@ class Logger(logging.Logger, metaclass=LoggerMeta):
         keywords: list[str] | None = None,
         suppress: list[str] | None = None,
     ) -> Self:
-        self.extras = {
+        self._extras = {
             k: v
             for k, v in {
                 "markup": markup,
@@ -91,28 +121,23 @@ class Logger(logging.Logger, metaclass=LoggerMeta):
         msg: object,
         args: ArgsType,
         exc_info: ExcInfoType | None = None,
-        extra: Mapping[str, object] | None = None,
+        extra: Mapping[str, Any] | None = None,
         stack_info: bool = False,
         stacklevel: int = 1,
     ) -> None:
-        extra = (self.extras or {}) | (extra or {})
-        self.extras = None
-        # noinspection PyProtectedMember
+        extra = self._extras | (extra or {})
+        self._extras = {}
         sinfo = None
-        if _srcfile:
-            try:
-                fn, lno, func, sinfo = self.findCaller(stack_info, stacklevel)
-            except ValueError:  # pragma: no cover
-                fn, lno, func = "(unknown file)", 0, "(unknown function)"
-        else:  # pragma: no cover
+        try:
+            fn, lno, func, sinfo = self.findCaller(stack_info, stacklevel)
+        except ValueError:  # pragma: no cover
             fn, lno, func = "(unknown file)", 0, "(unknown function)"
         if exc_info:
             if isinstance(exc_info, BaseException):
                 exc_info = (type(exc_info), exc_info, exc_info.__traceback__)
             elif not isinstance(exc_info, tuple):
-                exc_info = sys.exc_info()
-        record = self.makeRecord(self.name, level, fn, lno, msg, args, exc_info, func, extra, sinfo)
-        self.handle(record)
+                exc_info = get_exc_info()
+        self.handle(self.makeRecord(self.name, level, fn, lno, msg, args, exc_info, func, extra, sinfo))
 
     def findCaller(self, stack_info: bool = False, stacklevel: int = 1) -> tuple[str, int, str, str | None]:
         if (f := currentframe()) is None:
@@ -126,9 +151,9 @@ class Logger(logging.Logger, metaclass=LoggerMeta):
         co = f.f_code
         sinfo = None
         if stack_info:
-            with io.StringIO() as sio:
+            with StringIO() as sio:
                 sio.write("Stack (most recent call last):\n")
-                traceback.print_stack(f, file=sio)
+                print_stack(f, file=sio)
                 sinfo = sio.getvalue()
                 if sinfo[-1] == "\n":
                     sinfo = sinfo[:-1]

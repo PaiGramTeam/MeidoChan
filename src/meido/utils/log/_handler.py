@@ -21,6 +21,8 @@ from meido.utils.log._traceback import Traceback
 if TYPE_CHECKING:
     from rich.console import ConsoleRenderable, RenderableType
 
+__all__ = ("Handler", )
+
 
 @lru_cache(maxsize=64)
 def resolve_log_path(path: str | Path, root: Path = Path(os.curdir).resolve()) -> str:
