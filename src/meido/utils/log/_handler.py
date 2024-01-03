@@ -21,7 +21,7 @@ from meido.utils.log._traceback import Traceback
 if TYPE_CHECKING:
     from rich.console import ConsoleRenderable, RenderableType
 
-__all__ = ("Handler", )
+__all__ = ("Handler",)
 
 
 @lru_cache(maxsize=64)
