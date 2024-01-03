@@ -3,7 +3,7 @@ from typing import List, Literal, Optional, Union
 
 from pydantic import BaseSettings
 
-from meido.config import LogTracebackConfig, Settings
+from meido.config import LogTracebackConfig
 from meido.utils.const import PROJECT_ROOT
 
 __all__ = ("LoggerConfig",)

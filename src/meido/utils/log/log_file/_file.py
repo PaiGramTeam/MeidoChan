@@ -42,7 +42,7 @@ class LogFile(StringIO):
         os.makedirs(dirname, exist_ok=True)
 
     def _create_file(self, path: str | Path) -> None:
-        self._file = open(path, **self._kwargs)
+        self._file = open(path, **self._kwargs)  # skipcq: PTC-W6004
         self._file_path = path
 
     def __init__(

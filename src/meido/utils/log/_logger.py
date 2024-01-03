@@ -42,7 +42,7 @@ class LoggerMeta(type):
         return cls._instance
 
 
-class Logger(logging.Logger, metaclass=LoggerMeta):
+class Logger(logging.Logger, metaclass=LoggerMeta):  # skipcq: PY-A6006
     """只能有一个实例的 Logger"""
 
     def __init__(

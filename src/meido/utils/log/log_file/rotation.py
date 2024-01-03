@@ -27,7 +27,7 @@ def preprocess_string(string: str) -> float | int | tuple[int, datetime.time] | 
             return time
         return daytime
 
-    raise ValueError("Cannot parse rotation from: '%s'" % string)
+    raise ValueError(f"Cannot parse rotation from: '{string}'")
 
 
 class Rotation:
@@ -53,7 +53,7 @@ class Rotation:
         elif callable(rotation):
             self._rotation = rotation
         else:
-            raise TypeError("Cannot infer rotation for objects of type: '%s'" % type(rotation).__name__)
+            raise TypeError(f"Cannot infer rotation for objects of type: '{type(rotation).__name__}'")
 
     def __call__(self, *args, **kwargs):
         return self._rotation(*args, **kwargs)

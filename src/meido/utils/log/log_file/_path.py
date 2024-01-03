@@ -10,11 +10,11 @@ def generate_rename_path(root: str, ext: str, creation_time: float) -> str:
     creation_datetime = datetime.datetime.fromtimestamp(creation_time)
     date = FileDateFormatter(creation_datetime)
 
-    renamed_path = "{}.{}{}".format(root, date, ext)
+    renamed_path = f"{root}.{date}{ext}"
     counter = 1
 
     while os.path.exists(renamed_path):
         counter += 1
-        renamed_path = "{}.{}.{}{}".format(root, date, counter, ext)
+        renamed_path = f"{root}.{date}.{counter}{ext}"
 
     return renamed_path

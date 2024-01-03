@@ -10,7 +10,7 @@ __all__ = ("Retention",)
 
 def preprocess_string(string: str) -> datetime.timedelta:
     if (interval := string_parsers.parse_duration(string)) is None:
-        raise ValueError("Cannot parse retention from: '%s'" % string)
+        raise ValueError(f"Cannot parse retention from: '{string}'")
     return interval
 
 
@@ -28,7 +28,7 @@ class Retention:
         elif callable(retention):
             self._retention = retention
         else:
-            raise TypeError("Cannot infer retention for objects of type: '%s'" % type(retention).__name__)
+            raise TypeError(f"Cannot infer retention for objects of type: '{type(retention).__name__}'")
 
     def __call__(self, *args, **kwargs):
         # noinspection PyCallingNonCallable

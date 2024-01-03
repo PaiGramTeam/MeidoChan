@@ -48,7 +48,7 @@ def resolve_log_path(path: str | Path, root: Path = Path(os.curdir).resolve()) -
     return path.replace("lib.site-packages.", "")
 
 
-class Handler(logging.Handler):
+class Handler(logging.Handler):  # skipcq: PY-A6006
     @property
     def console(self) -> Console:
         return self._console
@@ -182,9 +182,12 @@ class Handler(logging.Handler):
         # noinspection PyBroadException
         try:
             self.console.print(log_renderable)
-        except Exception:
+        except Exception:  # skipcq: PYL-W0703
             self.handleError(record)
         return None
 
+    # noinspection PyProtectedMember
     def close(self) -> None:
         """Close handler"""
+        if not self._console._file.closed:
+            self._console._file.close()

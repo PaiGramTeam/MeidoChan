@@ -71,12 +71,12 @@ class Compression:
                         compression=zipfile.ZIP_DEFLATED,
                     )
                 case _:
-                    raise ValueError("Invalid compression format: '%s'" % ext)
+                    raise ValueError(f"Invalid compression format: '{ext}'")
             self._compression = partial(Compression.compression, ext="." + ext, compress_function=compress)
         elif callable(compression):
             self._compression = compression
         else:
-            raise TypeError("Cannot infer compression for objects of type: '%s'" % type(compression).__name__)
+            raise TypeError(f"Cannot infer compression for objects of type: '{type(compression).__name__}'")
 
     def __call__(self, path: str | Path):
         if self._compression is not None:
@@ -95,13 +95,12 @@ class Compression:
 
     @staticmethod
     def copy_compress(path_in, path_out, opener, **kwargs):
-        with open(path_in, "rb") as f_in:
-            with opener(path_out, **kwargs) as f_out:
-                shutil.copyfileobj(f_in, f_out)
+        with open(path_in, "rb") as f_in, opener(path_out, **kwargs) as f_out:
+            shutil.copyfileobj(f_in, f_out)
 
     @staticmethod
     def compression(path_in, ext, compress_function):
-        path_out = "{}{}".format(path_in, ext)
+        path_out = f"{path_in}{ext}"
 
         if os.path.exists(path_out):
             creation_time = get_ctime(path_out)

@@ -24,7 +24,7 @@ class FileDateFormatter:
 
 
 class Datetime(datetime_):  # noqa: N801
-    def __format__(self, spec):
+    def __format__(self, spec):  # skipcq: PYL-C0209
         if spec.endswith("!UTC"):
             dt = self.astimezone(timezone.utc)
             spec = spec[:-4]
@@ -44,11 +44,11 @@ class Datetime(datetime_):  # noqa: N801
                 "is not supported."
             )
 
-        year, month, day, hour, minute, second, weekday, yearday, _ = dt.timetuple()
+        year, month, day, hour, minute, second, weekday, year_day, _ = dt.timetuple()
         microsecond = dt.microsecond
         timestamp = dt.timestamp()
-        tzinfo = dt.tzinfo or timezone(timedelta(seconds=0))
-        offset = tzinfo.utcoffset(dt).total_seconds()
+        timezone_info = dt.tzinfo or timezone(timedelta(seconds=0))
+        offset = timezone_info.utcoffset(dt).total_seconds()
         sign = ("-", "+")[offset >= 0]
         (h, m), s = divmod(abs(offset // 60), 60), abs(offset) % 60
 
@@ -60,8 +60,8 @@ class Datetime(datetime_):  # noqa: N801
             "MMM": month_abbr[month],
             "MM": "%02d" % month,
             "M": "%d" % month,
-            "DDDD": "%03d" % yearday,
-            "DDD": "%d" % yearday,
+            "DDDD": "%03d" % year_day,
+            "DDD": "%d" % year_day,
             "DD": "%02d" % day,
             "D": "%d" % day,
             "dddd": day_name[weekday],
@@ -85,7 +85,7 @@ class Datetime(datetime_):  # noqa: N801
             "A": ("AM", "PM")[hour // 12],
             "Z": "%s%02d:%02d%s" % (sign, h, m, (":%09.06f" % s)[: 11 if s % 1 else 3] * (s > 0)),
             "ZZ": "%s%02d%02d%s" % (sign, h, m, ("%09.06f" % s)[: 10 if s % 1 else 2] * (s > 0)),
-            "zz": tzinfo.tzname(dt) or "",
+            "zz": timezone_info.tzname(dt) or "",
             "X": "%d" % timestamp,
             "x": "%d" % (int(timestamp) * 1000000 + microsecond),
         }
