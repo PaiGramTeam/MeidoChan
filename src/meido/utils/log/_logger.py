@@ -48,7 +48,7 @@ class Logger(logging.Logger, metaclass=LoggerMeta):  # skipcq: PY-A6006
     def __init__(
         self,
         name: str | None = None,
-        level: str | int | None = None,
+        level: str | int = 0,
         *,
         config: LoggerConfig = LoggerConfig(),
     ):

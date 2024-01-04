@@ -189,5 +189,5 @@ class Handler(logging.Handler):  # skipcq: PY-A6006
     # noinspection PyProtectedMember
     def close(self) -> None:
         """Close handler"""
-        if not self._console._file.closed:
-            self._console._file.close()
+        if not self._console._file.closed:  # skipcq: PYL-W0212
+            self._console._file.close()  # skipcq: PYL-W0212

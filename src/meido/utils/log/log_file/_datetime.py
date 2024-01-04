@@ -24,7 +24,7 @@ class FileDateFormatter:
 
 
 class Datetime(datetime_):  # noqa: N801
-    def __format__(self, spec):  # skipcq: PYL-C0209
+    def __format__(self, spec):
         if spec.endswith("!UTC"):
             dt = self.astimezone(timezone.utc)
             spec = spec[:-4]
@@ -53,41 +53,43 @@ class Datetime(datetime_):  # noqa: N801
         (h, m), s = divmod(abs(offset // 60), 60), abs(offset) % 60
 
         rep = {
-            "YYYY": "%04d" % year,
-            "YY": "%02d" % (year % 100),
-            "Q": "%d" % ((month - 1) // 3 + 1),
+            "YYYY": f"{year:04d}",
+            "YY": f"{(year % 100):02d}",
+            "Q": f"{((month - 1) // 3 + 1):0.0f}",
             "MMMM": month_name[month],
             "MMM": month_abbr[month],
-            "MM": "%02d" % month,
-            "M": "%d" % month,
-            "DDDD": "%03d" % year_day,
-            "DDD": "%d" % year_day,
-            "DD": "%02d" % day,
-            "D": "%d" % day,
+            "MM": f"{month:02d}",
+            "M": str(month),
+            "DDDD": f"{year_day:03d}",
+            "DDD": f"{year_day:d}",
+            "DD": f"{day:02d}",
+            "D": f"{day:d}",
             "dddd": day_name[weekday],
             "ddd": day_abbr[weekday],
-            "d": "%d" % weekday,
-            "E": "%d" % (weekday + 1),
-            "HH": "%02d" % hour,
-            "H": "%d" % hour,
-            "hh": "%02d" % ((hour - 1) % 12 + 1),
-            "h": "%d" % ((hour - 1) % 12 + 1),
-            "mm": "%02d" % minute,
-            "m": "%d" % minute,
-            "ss": "%02d" % second,
-            "s": "%d" % second,
-            "S": "%d" % (microsecond // 100000),
-            "SS": "%02d" % (microsecond // 10000),
-            "SSS": "%03d" % (microsecond // 1000),
-            "SSSS": "%04d" % (microsecond // 100),
-            "SSSSS": "%05d" % (microsecond // 10),
-            "SSSSSS": "%06d" % microsecond,
+            "d": f"{weekday:d}",
+            "E": f"{(weekday + 1):d}",
+            "HH": f"{hour:02d}",
+            "H": f"{hour:d}",
+            "hh": f"{((hour - 1) % 12 + 1):02d}",
+            "h": f"{((hour - 1) % 12 + 1):d}",
+            "mm": f"{minute:02d}",
+            "m": f"{minute:d}",
+            "ss": f"{second:02d}",
+            "s": f"{second:d}",
+            "S": f"{(microsecond // 100000):d}",
+            "SS": f"{(microsecond // 10000):02d}",
+            "SSS": f"{(microsecond // 1000):03d}",
+            "SSSS": f"{(microsecond // 100):04d}",
+            "SSSSS": f"{(microsecond // 10):05d}",
+            "SSSSSS": f"{microsecond:06d}",
             "A": ("AM", "PM")[hour // 12],
-            "Z": "%s%02d:%02d%s" % (sign, h, m, (":%09.06f" % s)[: 11 if s % 1 else 3] * (s > 0)),
-            "ZZ": "%s%02d%02d%s" % (sign, h, m, ("%09.06f" % s)[: 10 if s % 1 else 2] * (s > 0)),
+            # "Z": "%s%02d:%02d%s" % (sign, h, m, f':{s:09.06f}'[: 11 if s % 1 else 3] * (s > 0)),
+            "Z": f"{sign}{h:02d}:{m:02d}{f':{s:09.06f}'[: 11 if s % 1 else 3] * (s > 0)}",
+            # "ZZ": "%s%02d%02d%s" % (sign, h, m, ("%09.06f" % s)[: 10 if s % 1 else 2] * (s > 0)),
+            "ZZ": f"{sign}{h:02d}{m:02d}{f'{s:09.06f}'[: 10 if s % 1 else 2] * (s > 0)}",
             "zz": timezone_info.tzname(dt) or "",
-            "X": "%d" % timestamp,
-            "x": "%d" % (int(timestamp) * 1000000 + microsecond),
+            "X": f"{timestamp:d}",
+            "x": f"{(int(timestamp) * 1000000 + microsecond):d}",
         }
 
         def get(_m):
