@@ -124,13 +124,15 @@ class MultiProcessFile(StringIO):
         self._queue = Queue()
         self._file = LogFile(**self._kwargs)
         self._signal: Value = Value("i", 1)
-        self._process = Process(self._queue, self._signal, self._kwargs)
-        self._process.start()
+        self._process = None
 
     def _get_file(self) -> IO[str]:
         return self._file
 
     def write(self, s: AnyStr) -> int:
+        if self._process is None:
+            self._process = Process(self._queue, self._signal, self._kwargs)
+            self._process.start()
         self._queue.put(s)
         return len(s)
 

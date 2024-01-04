@@ -75,7 +75,7 @@ class Logger(logging.Logger, metaclass=LoggerMeta):  # skipcq: PY-A6006
         self.addHandler(
             Handler(
                 "DEBUG",
-                file=(MultiProcessFile if config.multiprocess else LogFile)("debug/debug.log"),
+                file=(MultiProcessFile if config.multiprocess else LogFile)("log/debug/debug.log"),
                 width=120,
                 omit_repeated_times=True,
                 project_root=config.project_root,
@@ -87,7 +87,7 @@ class Logger(logging.Logger, metaclass=LoggerMeta):  # skipcq: PY-A6006
         self.addHandler(
             Handler(
                 "ERROR",
-                file=(MultiProcessFile if config.multiprocess else LogFile)("error/error.log"),
+                file=(MultiProcessFile if config.multiprocess else LogFile)("log/error/error.log"),
                 width=120,
                 omit_repeated_times=True,
                 project_root=config.project_root,
