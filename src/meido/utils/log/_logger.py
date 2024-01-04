@@ -32,7 +32,7 @@ def _is_internal_frame(frame: FrameType) -> bool:
     return (
         filename == _srcfile
         or ("importlib" in filename and "_bootstrap" in filename)
-        or logging._is_internal_frame(frame)
+        or logging._is_internal_frame(frame)  # skipcq: PYL-W0212
     )
 
 
