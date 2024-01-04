@@ -103,6 +103,11 @@ class Process(multiprocessing.Process):
         print_to_file()
         file.close()
 
+    def close(self) -> None:
+        self.signal.value = False
+        self.join()
+        super().close()
+
 
 class MultiProcessFile(StringIO):
     def __init__(
@@ -138,7 +143,7 @@ class MultiProcessFile(StringIO):
 
     def close(self) -> None:
         self._signal.value = False
-        if self._process.is_alive():
+        if self._process is not None and self._process.is_alive():
             self._process.close()
 
     def flush(self) -> None:
