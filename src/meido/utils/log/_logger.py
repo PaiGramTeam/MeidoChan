@@ -42,7 +42,8 @@ class LoggerMeta(type):
 
     def __call__(cls, *args, **kwargs) -> "Logger":
         with cls._lock:
-            cls._instance = super(LoggerMeta, cls).__call__(*args, **kwargs)
+            if cls._instance is None:
+                cls._instance = super(LoggerMeta, cls).__call__(*args, **kwargs)
         return cls._instance
 
 
