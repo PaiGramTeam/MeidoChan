@@ -12,15 +12,15 @@ from typing_extensions import Self
 
 from meido.utils.log._config import LoggerConfig
 from meido.utils.log._handler import Handler
-from meido.utils.typedefs import ArgsType, ExcInfoType
-
 from meido.utils.log.log_file import LogFile, MultiProcessFile
+from meido.utils.typedefs import ArgsType, ExcInfoType, ExceptionInfoType
 
 if TYPE_CHECKING:
     from multiprocessing.synchronize import RLock as LockType
 
 __all__ = ("Logger",)
 
+NONE = object()
 
 logging.addLevelName(25, "SUCCESS")
 
@@ -58,48 +58,57 @@ class Logger(logging.Logger, metaclass=LoggerMeta):  # skipcq: PY-A6006
         config: LoggerConfig = LoggerConfig(),
     ):
         """Initialization Logger"""
+        level = level or config.level or "INFO"
         super().__init__(
             name or config.name or "meido-logger",
-            logging.getLevelName(level or config.level or "INFO"),
+            logging.getLevelName(level),
         )
         self.handlers = []
         self._extras: dict[str, Any] = {}
         self._config = config
-        self.addHandler(
-            Handler(
-                level,
-                width=config.width,
-                color_system=config.color_system,
-                omit_repeated_times=config.omit_repeated_times,
-                project_root=config.project_root,
-                time_format=config.time_format,
-                traceback_configs=config.traceback,
-            )
+        simple_handler = Handler(
+            level,
+            width=config.width,
+            color_system=config.color_system,
+            omit_repeated_times=config.omit_repeated_times,
+            project_root=config.project_root,
+            time_format=config.time_format,
+            traceback_configs=config.traceback,
         )
         # Debug log
-        self.addHandler(
-            Handler(
-                "DEBUG",
-                file=(MultiProcessFile if config.multiprocess else LogFile)("log/debug/debug.log"),
-                width=120,
-                omit_repeated_times=True,
-                project_root=config.project_root,
-                time_format=config.time_format,
-                traceback_configs=config.traceback,
-            )
+        debug_handler = Handler(
+            "DEBUG",
+            file=(MultiProcessFile if config.multiprocess else LogFile)("log/debug/debug.log"),
+            width=120,
+            omit_repeated_times=True,
+            project_root=config.project_root,
+            time_format=config.time_format,
+            traceback_configs=config.traceback,
         )
         # Error log
-        self.addHandler(
-            Handler(
-                "ERROR",
-                file=(MultiProcessFile if config.multiprocess else LogFile)("log/error/error.log"),
-                width=120,
-                omit_repeated_times=True,
-                project_root=config.project_root,
-                time_format=config.time_format,
-                traceback_configs=config.traceback,
-            )
+        error_handler = Handler(
+            "ERROR",
+            file=(MultiProcessFile if config.multiprocess else LogFile)("log/error/error.log"),
+            width=120,
+            omit_repeated_times=True,
+            project_root=config.project_root,
+            time_format=config.time_format,
+            traceback_configs=config.traceback,
         )
+        if config.capture_warnings:
+            logging.captureWarnings(True)
+            warnings_logger = logging.getLogger("py.warnings")
+            warnings_logger.addHandler(simple_handler)
+            warnings_logger.addHandler(debug_handler)
+
+        logging.basicConfig(
+            level=level,
+            format="%(message)s",
+            datefmt=config.time_format,
+            handlers=[simple_handler, debug_handler, error_handler],
+        )
+        for handler in logging.root.handlers[:]:
+            self.addHandler(handler)
 
     def opt(
         self,
@@ -183,3 +192,21 @@ class Logger(logging.Logger, metaclass=LoggerMeta):  # skipcq: PY-A6006
                 stacklevel=stacklevel,
                 extra=extra,
             )
+
+    def exception(  # pylint: disable=W1113
+        self,
+        msg: Any = NONE,
+        *args: Any,
+        exc_info: Optional[ExceptionInfoType] = True,
+        stack_info: bool = False,
+        stacklevel: int = 1,
+        extra: Optional[Mapping[str, Any]] = None,
+    ) -> None:
+        super(Logger, self).exception(
+            "" if msg is NONE else msg,
+            *args,
+            exc_info=exc_info,
+            stack_info=stack_info,
+            stacklevel=stacklevel,
+            extra=extra,
+        )
