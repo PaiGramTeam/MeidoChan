@@ -1,5 +1,6 @@
 import logging
 import os
+import site
 import sys
 from datetime import datetime
 from functools import lru_cache
@@ -14,7 +15,7 @@ from rich.text import Text
 from rich.theme import Theme
 
 from meido.config import LogTracebackConfig
-from meido.utils.const import PROJECT_ROOT
+from meido.utils.const import PKG_ROOT, PROJECT_ROOT
 from meido.utils.log._style import DEFAULT_STYLE
 from meido.utils.log._traceback import Traceback
 
@@ -24,28 +25,44 @@ if TYPE_CHECKING:
 __all__ = ("Handler",)
 
 
-@lru_cache(maxsize=64)
+@lru_cache()
+def resolve_sit_path(path: Path | str) -> str:
+    result = None
+    for s in site.getsitepackages():
+        try:
+            result = Path(path).relative_to(Path(s))
+            break
+        except (ValueError, TypeError):
+            continue
+    if result is None:
+        result = "<SITE>"
+    else:
+        result = str(result.with_suffix("")).replace(os.sep, ".")
+    return result
+
+
+@lru_cache()
+def in_pkg_root(path: Path | str) -> bool:
+    try:
+        Path(path).relative_to(PKG_ROOT)
+        return True
+    except ValueError:
+        return False
+
+
+@lru_cache()
 def resolve_log_path(path: str | Path, root: Path = Path(os.curdir).resolve()) -> str:
     if path != "<input>":
-        try:
-            path = str(Path(path).relative_to(root).with_suffix("")).replace(os.sep, ".")
-        except ValueError:
-            import site
-
-            path = None
-            for s in site.getsitepackages():
-                try:
-                    path = str(Path(path).relative_to(Path(s)))
-                    break
-                except (ValueError, TypeError):
-                    continue
-            if path is None:
-                path = "<SITE>"
-            else:
-                path = path.split(".")[0].replace(os.sep, ".")
+        if in_pkg_root(path):
+            result = str(Path(path).relative_to(PKG_ROOT).with_suffix("")).replace(os.sep, ".")
+        else:
+            try:
+                result = str(Path(path).relative_to(root).with_suffix("")).replace(os.sep, ".")
+            except ValueError:
+                result = resolve_sit_path(path)
     else:
-        path = "<INPUT>"
-    return path.replace("lib.site-packages.", "")
+        result = "<INPUT>"  # stdin
+    return result.replace("lib.site-packages.", "")
 
 
 class Handler(logging.Handler):  # skipcq: PY-A6006
