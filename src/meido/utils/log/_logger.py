@@ -29,7 +29,11 @@ _srcfile = os.path.normcase(__file__)
 
 def _is_internal_frame(frame: FrameType) -> bool:
     filename = os.path.normcase(frame.f_code.co_filename)
-    return filename == _srcfile or ("importlib" in filename and "_bootstrap" in filename)
+    return (
+        filename == _srcfile
+        or ("importlib" in filename and "_bootstrap" in filename)
+        or logging._is_internal_frame(frame)
+    )
 
 
 class LoggerMeta(type):
