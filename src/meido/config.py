@@ -6,14 +6,13 @@ import dotenv
 from pydantic import AnyUrl, Field, BaseSettings
 
 from meido.utils.const import PROJECT_ROOT
-from meido.utils.typedefs import NaturalNumber
 
 try:
     import ujson as jsonlib
 except ImportError:
     import json as jsonlib
 
-__all__ = ("ApplicationConfig", "config", "JoinGroups")
+__all__ = ("ApplicationConfig", "config", "JoinGroups", "LogTracebackConfig")
 
 dotenv.load_dotenv(dotenv_path=dotenv.find_dotenv(usecwd=True))
 
@@ -58,17 +57,34 @@ class RedisConfig(Settings):
         env_prefix = "redis_"
 
 
+class LogTracebackConfig(Settings):
+    class Config(Settings.Config):
+        env_prefix = "logger_traceback_"
+
+    class LogTraceLocalsConfig(Settings):
+        enable: bool = True
+        max_depth: int | None = None
+        max_length: int = 10
+        max_string: int = 80
+
+        class Config(Settings.Config):
+            env_prefix = "logger_traceback_locals_"
+
+    max_frames: int = 20
+    word_wrap: bool = False
+    suppress: list[str] = []
+    locals: LogTraceLocalsConfig = LogTraceLocalsConfig()
+
+
 class LoggerConfig(Settings):
     name: str = "PaiGram"
     width: Optional[int] = None
     time_format: str = "[%Y-%m-%d %X]"
-    traceback_max_frames: int = 20
+    capture_warnings: bool = True
     path: Path = PROJECT_ROOT / "logs"
-    render_keywords: List[str] = ["BOT"]
-    locals_max_length: int = 10
-    locals_max_string: int = 80
-    locals_max_depth: Optional[NaturalNumber] = None
+    keywords: List[str] = ["BOT"]
     filtered_names: List[str] = ["uvicorn"]
+    traceback: LogTracebackConfig = LogTracebackConfig()
 
     class Config(Settings.Config):
         env_prefix = "logger_"

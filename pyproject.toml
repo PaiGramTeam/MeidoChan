@@ -23,6 +23,7 @@ dependencies = [
     "pydantic<2.0.0,>=1.10.13",
     "redis>=5.0.1",
     "fakeredis>=2.20.1",
+    "win32-setctime>=1.0.0; sys_platform == \"win32\"",
 ]
 requires-python = ">=3.11,<4.0"
 readme = "README.md"

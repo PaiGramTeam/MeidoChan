@@ -1,180 +1,212 @@
-import inspect
-import io
 import logging
 import os
-import traceback as traceback_
+from inspect import currentframe
+from io import StringIO
 from multiprocessing import RLock as Lock
-from pathlib import Path
-from types import TracebackType
-from typing import Any, Callable, List, Mapping, Optional, TYPE_CHECKING, Tuple, Type, Union
+from sys import exc_info as get_exc_info
+from traceback import print_stack
+from types import FrameType
+from typing import Any, Mapping, Optional, TYPE_CHECKING
 
 from typing_extensions import Self
 
-from meido.utils.log._handler import FileHandler, Handler
-from meido.utils.typedefs import LogFilterType
+from meido.utils.const import DEFAULT_NONE
+from meido.utils.log._config import LoggerConfig
+from meido.utils.log._handler import Handler
+from meido.utils.log.log_file import LogFile, MultiProcessFile
+from meido.utils.typedefs import ArgsType, ExcInfoType, ExceptionInfoType
 
 if TYPE_CHECKING:
-    from logging import LogRecord
+    from multiprocessing.synchronize import RLock as LockType
 
-    from meido.utils.log._config import LoggerConfig
-
-__all__ = ("Logger", "LogFilter")
-
-SysExcInfoType = Union[
-    Tuple[Type[BaseException], BaseException, Optional[TracebackType]],
-    Tuple[None, None, None],
-]
-ExceptionInfoType = Union[bool, SysExcInfoType, BaseException]
-
-_lock = Lock()
-NONE = object()
+__all__ = ("Logger",)
 
 
-class Logger(logging.Logger):  # skipcq: PY-A6006
+logging.addLevelName(25, "SUCCESS")
+
+_srcfile = os.path.normcase(__file__)
+
+
+def _is_internal_frame(frame: FrameType) -> bool:
+    filename = os.path.normcase(frame.f_code.co_filename)
+    return (
+        filename == _srcfile
+        or ("importlib" in filename and "_bootstrap" in filename)
+        or logging._is_internal_frame(frame)  # skipcq: PYL-W0212
+    )
+
+
+class LoggerMeta(type):
+    _lock: "LockType" = Lock()
     _instance: Optional["Logger"] = None
 
-    def __new__(cls, *args, **kwargs) -> "Logger":
-        with _lock:
+    def __call__(cls, *args, **kwargs) -> "Logger":
+        with cls._lock:
             if cls._instance is None:
-                result = super(Logger, cls).__new__(cls)
-                cls._instance = result
+                cls._instance = super(LoggerMeta, cls).__call__(*args, **kwargs)
         return cls._instance
 
-    def __init__(self, config: "LoggerConfig" = None) -> None:
-        from utils.log._config import LoggerConfig
 
-        self.config = config or LoggerConfig()
+class Logger(logging.Logger, metaclass=LoggerMeta):  # skipcq: PY-A6006
+    """只能有一个实例的 Logger"""
 
-        level_ = 10 if self.config.debug else 20
+    def __init__(
+        self,
+        name: str | None = None,
+        level: str | int = 0,
+        *,
+        config: LoggerConfig = LoggerConfig(),
+    ):
+        """Initialization Logger"""
+        level = level or config.level or "INFO"
         super().__init__(
-            name=self.config.name,
-            level=level_ if self.config.level is None else self.config.level,
+            name or config.name or "meido-logger",
+            logging.getLevelName(level),
         )
-
-        log_path = Path(self.config.project_root).joinpath(self.config.log_path)
-        handler_config = {
-            "width": self.config.width,
-            "keywords": self.config.keywords,
-            "locals_max_length": self.config.traceback_locals_max_length,
-            "locals_max_string": self.config.traceback_locals_max_string,
-            "project_root": self.config.project_root,
-            "log_time_format": self.config.time_format,
-        }
-        handler, debug_handler, error_handler = (
-            # 控制台 log 配置
-            Handler(color_system=self.config.color_system, **handler_config),
-            # debug.log 配置
-            FileHandler(level=10, path=log_path.joinpath("debug/debug.log"), locals_max_depth=1, **handler_config),
-            # error.log 配置
-            FileHandler(
-                level=40,
-                path=log_path.joinpath("error/error.log"),
-                locals_max_depth=self.config.traceback_locals_max_depth,
-                **handler_config,
-            ),
+        self.handlers = []
+        self._extras: dict[str, Any] = {}
+        self._config = config
+        simple_handler = Handler(
+            level,
+            width=config.width,
+            color_system=config.color_system,
+            omit_repeated_times=config.omit_repeated_times,
+            project_root=config.project_root,
+            time_format=config.time_format,
+            traceback_configs=config.traceback,
         )
-        logging.basicConfig(
-            level=10 if self.config.debug else 20,
-            format="%(message)s",
-            datefmt=self.config.time_format,
-            handlers=[handler, debug_handler, error_handler],
+        # Debug log
+        debug_handler = Handler(
+            "DEBUG",
+            file=(MultiProcessFile if config.multiprocess else LogFile)("log/debug/debug.log"),
+            width=120,
+            omit_repeated_times=True,
+            project_root=config.project_root,
+            time_format=config.time_format,
+            traceback_configs=config.traceback,
         )
-        if self.config.capture_warnings:
+        # Error log
+        error_handler = Handler(
+            "ERROR",
+            file=(MultiProcessFile if config.multiprocess else LogFile)("log/error/error.log"),
+            width=120,
+            omit_repeated_times=True,
+            project_root=config.project_root,
+            time_format=config.time_format,
+            traceback_configs=config.traceback,
+        )
+        if config.capture_warnings:
             logging.captureWarnings(True)
             warnings_logger = logging.getLogger("py.warnings")
-            warnings_logger.addHandler(handler)
+            warnings_logger.addHandler(simple_handler)
             warnings_logger.addHandler(debug_handler)
 
-        self.addHandler(handler)
-        self.addHandler(debug_handler)
-        self.addHandler(error_handler)
+        logging.basicConfig(
+            level=level,
+            format="%(message)s",
+            datefmt=config.time_format,
+            handlers=[simple_handler, debug_handler, error_handler],
+        )
+        for handler in logging.root.handlers[:]:
+            self.addHandler(handler)
+
+    def opt(
+        self,
+        markup: bool | None = None,
+        depth: int | None = None,
+        keywords: list[str] | None = None,
+        suppress: list[str] | None = None,
+    ) -> Self:
+        self._extras = {
+            k: v
+            for k, v in {
+                "markup": markup,
+                "depth": depth,
+                "keywords": (keywords or []) + (self._config.keywords or []),
+                "suppress": suppress,
+            }.items()
+            if v is not None
+        }
+        return self
+
+    def _log(
+        self,
+        level: int,
+        msg: object,
+        args: ArgsType,
+        exc_info: ExcInfoType | None = None,
+        extra: Mapping[str, Any] | None = None,
+        stack_info: bool = False,
+        stacklevel: int = 1,
+    ) -> None:
+        extra = self._extras | (extra or {})
+        self._extras = {}
+        sinfo = None
+        try:
+            fn, lno, func, sinfo = self.findCaller(stack_info, stacklevel)
+        except ValueError:  # pragma: no cover
+            fn, lno, func = "(unknown file)", 0, "(unknown function)"
+        if exc_info:
+            if isinstance(exc_info, BaseException):
+                exc_info = (type(exc_info), exc_info, exc_info.__traceback__)
+            elif not isinstance(exc_info, tuple):
+                exc_info = get_exc_info()
+        self.handle(self.makeRecord(self.name, level, fn, lno, msg, args, exc_info, func, extra, sinfo))
+
+    def findCaller(self, stack_info: bool = False, stacklevel: int = 1) -> tuple[str, int, str, str | None]:
+        if (f := currentframe()) is None:
+            return "(unknown file)", 0, "(unknown function)", None
+        while stacklevel > 0:
+            if (next_f := f.f_back) is None:
+                break
+            f = next_f
+            if not _is_internal_frame(f):
+                stacklevel -= 1
+        co = f.f_code
+        sinfo = None
+        if stack_info:
+            with StringIO() as sio:
+                sio.write("Stack (most recent call last):\n")
+                print_stack(f, file=sio)
+                sinfo = sio.getvalue()
+                if sinfo[-1] == "\n":
+                    sinfo = sinfo[:-1]
+        return co.co_filename, f.f_lineno, co.co_name, sinfo
 
     def success(
         self,
-        msg: Any,
-        *args: Any,
-        exc_info: Optional[ExceptionInfoType] = None,
+        msg: object,
+        *args: object,
+        exc_info: ExcInfoType = None,
         stack_info: bool = False,
         stacklevel: int = 1,
-        extra: Optional[Mapping[str, Any]] = None,
+        extra: Mapping[str, object] | None = None,
     ) -> None:
-        return self.log(
-            25,
-            msg,
-            *args,
-            exc_info=exc_info,
-            stack_info=stack_info,
-            stacklevel=stacklevel,
-            extra=extra,
-        )
+        if self.isEnabledFor(25):
+            self._log(
+                25,
+                msg,
+                args,
+                exc_info=exc_info,
+                stack_info=stack_info,
+                stacklevel=stacklevel,
+                extra=extra,
+            )
 
     def exception(  # pylint: disable=W1113
         self,
-        msg: Any = NONE,
+        msg: Any = DEFAULT_NONE,
         *args: Any,
         exc_info: Optional[ExceptionInfoType] = True,
         stack_info: bool = False,
         stacklevel: int = 1,
         extra: Optional[Mapping[str, Any]] = None,
-        **kwargs,
     ) -> None:
         super(Logger, self).exception(
-            "" if msg is NONE else msg,
+            "" if msg is DEFAULT_NONE else msg,
             *args,
             exc_info=exc_info,
             stack_info=stack_info,
             stacklevel=stacklevel,
             extra=extra,
         )
-
-    def findCaller(self, stack_info: bool = False, stacklevel: int = 1) -> Tuple[str, int, str, Optional[str]]:
-        frame = inspect.currentframe()
-        if frame is not None:
-            frame = frame.f_back
-        original_frame = frame
-        while frame and stacklevel > 1:
-            frame = frame.f_back
-            stacklevel -= 1
-        if not frame:
-            frame = original_frame
-        rv = "(unknown file)", 0, "(unknown function)", None
-        while hasattr(frame, "f_code"):
-            code = frame.f_code
-            filename = os.path.normcase(code.co_filename)
-            if filename in [
-                os.path.normcase(Path(__file__).resolve()),
-                os.path.normcase(logging.addLevelName.__code__.co_filename),
-            ]:
-                frame = frame.f_back
-                continue
-            sinfo = None
-            if stack_info:
-                sio = io.StringIO()
-                sio.write("Stack (most recent call last):\n")
-                traceback_.print_stack(frame, file=sio)
-                sinfo = sio.getvalue()
-                if sinfo[-1] == "\n":
-                    sinfo = sinfo[:-1]
-                sio.close()
-            rv = (code.co_filename, frame.f_lineno, code.co_name, sinfo)
-            break
-        return rv
-
-    def addFilter(self, log_filter: LogFilterType) -> None:  # pylint: disable=arguments-differ
-        for handler in self.handlers:
-            handler.addFilter(log_filter)
-
-
-class LogFilter(logging.Filter):  # skipcq: PY-A6006
-    _filter_list: List[Callable[["LogRecord"], bool]] = []
-
-    def __init__(self, name: str = ""):
-        super().__init__(name=name)
-
-    def add_filter(self, f: Callable[["LogRecord"], bool]) -> Self:
-        if f not in self._filter_list:
-            self._filter_list.append(f)
-        return self
-
-    def filter(self, record: "LogRecord") -> bool:
-        return all(map(lambda func: func(record), self._filter_list))
