@@ -5,7 +5,7 @@ from typing import List
 from meido.utils.const._path import *
 from meido.utils.const._single import *
 
-NOT_SET = object()
+DEFAULT_NONE = object()
 # noinspection PyTypeChecker
 WRAPPER_ASSIGNMENTS: List[str] = list(_WRAPPER_ASSIGNMENTS) + [
     "block",

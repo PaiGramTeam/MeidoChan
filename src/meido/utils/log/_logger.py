@@ -10,6 +10,7 @@ from typing import Any, Mapping, Optional, TYPE_CHECKING
 
 from typing_extensions import Self
 
+from meido.utils.const import DEFAULT_NONE
 from meido.utils.log._config import LoggerConfig
 from meido.utils.log._handler import Handler
 from meido.utils.log.log_file import LogFile, MultiProcessFile
@@ -20,7 +21,6 @@ if TYPE_CHECKING:
 
 __all__ = ("Logger",)
 
-NONE = object()
 
 logging.addLevelName(25, "SUCCESS")
 
@@ -195,7 +195,7 @@ class Logger(logging.Logger, metaclass=LoggerMeta):  # skipcq: PY-A6006
 
     def exception(  # pylint: disable=W1113
         self,
-        msg: Any = NONE,
+        msg: Any = DEFAULT_NONE,
         *args: Any,
         exc_info: Optional[ExceptionInfoType] = True,
         stack_info: bool = False,
@@ -203,7 +203,7 @@ class Logger(logging.Logger, metaclass=LoggerMeta):  # skipcq: PY-A6006
         extra: Optional[Mapping[str, Any]] = None,
     ) -> None:
         super(Logger, self).exception(
-            "" if msg is NONE else msg,
+            "" if msg is DEFAULT_NONE else msg,
             *args,
             exc_info=exc_info,
             stack_info=stack_info,
